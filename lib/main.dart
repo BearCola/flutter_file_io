@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -34,6 +34,34 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   TextEditingController _enterDataField = TextEditingController();
+  String _savedData = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  _loadSavedData() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+
+    setState(
+      () {
+        if (preferences.getString('data') != null &&
+            preferences.getString('data').isNotEmpty) {
+          _savedData = preferences.getString('data');
+        } else {
+          _savedData = 'Empty SP';
+        }
+      },
+    );
+  }
+
+  _saveMessage(String message) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString('data', message);
+    _loadSavedData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,19 +83,27 @@ class _HomeState extends State<Home> {
             color: Colors.redAccent,
             onPressed: () {
               writeData(_enterDataField.text);
+              _saveMessage(_enterDataField.text);
             },
             child: Column(
               children: <Widget>[
-                Text('Save Data'),
+                Text(
+                  'Save Data',
+                  style: TextStyle(color: Colors.white70),
+                ),
                 Padding(
                   padding: EdgeInsets.all(14.5),
+                ),
+                Text(
+                  'sharedPreference : $_savedData',
+                  style: TextStyle(color: Colors.white70),
                 ),
                 FutureBuilder(
                   future: readData(),
                   builder: (BuildContext context, AsyncSnapshot<String> data) {
                     if (data.hasData != null) {
                       return Text(
-                        data.data.toString(),
+                        'file : ${data.data.toString()}',
                         style: TextStyle(color: Colors.white70),
                       );
                     } else {
